@@ -2,7 +2,33 @@
 
 ## Index
 
+- [0.2.0 — Hermes Agent Integration](#020--hermes-agent-integration)
 - [0.1.0 — Project Scaffolding](#010--project-scaffolding)
+
+---
+
+## 0.2.0 — Hermes Agent Integration
+
+**2026-03-09**
+
+Replaced the echo stub with a live Hermes agent session. See [`0.2.0-agent-integration.md`](0.2.0-agent-integration.md) for full implementation notes.
+
+### Added
+
+- **Hermes agent integration** (`server/main.py`) — each WebSocket connection gets its own `AIAgent` instance with multi-turn conversation support via `run_conversation()`.
+- **Environment loading** — `python-dotenv` reads `.env` at startup; `OPENROUTER_API_KEY` is now actually consumed.
+- **Processing indicator** (`frontend/main.js`, `frontend/style.css`) — pulsing "PROCESSING..." message while the agent thinks, input disabled during this state.
+- **Configurable model** — `LLM_MODEL` and `HERMES_MAX_ITERATIONS` env vars control agent behavior.
+
+### Changed
+
+- **Dockerfile** — installs `git` for pip to clone `hermes-agent` from GitHub.
+- **`server/requirements.txt`** — added `python-dotenv` and `hermes-agent[all]`.
+- **`.env.example`** — added Hermes-specific config options.
+
+### Security
+
+- Terminal/shell toolset disabled (`disabled_toolsets=["terminal"]`) to prevent the agent from running arbitrary commands on the server.
 
 ---
 

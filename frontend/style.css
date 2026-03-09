@@ -143,6 +143,10 @@ html, body {
   padding-left: 10px;
 }
 
+.msg.system.processing {
+  animation: pulse 1s infinite;
+}
+
 .msg.user {
   color: var(--blue);
 }
