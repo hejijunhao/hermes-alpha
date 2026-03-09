@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HERMES // TERMINAL</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div id="scanlines"></div>
+  <div id="terminal">
+    <header id="header">
+      <div class="header-left">
+        <span class="logo">HERMES</span>
+        <span class="divider">//</span>
+        <span class="status" id="status">OFFLINE</span>
+      </div>
+      <div class="header-right">
+        <span class="indicator" id="indicator"></span>
+        <span class="sync">SYNC <span id="sync-ratio">000.00</span>%</span>
+      </div>
+    </header>
+    <main id="output"></main>
+    <footer id="input-bar">
+      <span class="prompt">&gt;&gt;</span>
+      <input type="text" id="input" autocomplete="off" autofocus placeholder="ENTER COMMAND" />
+    </footer>
+  </div>
+  <script src="/static/main.js"></script>
+</body>
+</html>

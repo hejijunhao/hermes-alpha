@@ -1,0 +1,13 @@
+.git
+.gitignore
+.env
+docs/
+LICENSE
+README.md
+docker-compose.yml
+Makefile
+.DS_Store
+__pycache__
+*.pyc
+.venv
+venv

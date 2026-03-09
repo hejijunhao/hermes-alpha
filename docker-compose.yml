@@ -1,0 +1,10 @@
+services:
+  hermes:
+    build: .
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    volumes:
+      - ./server:/app/server
+      - ./frontend:/app/frontend

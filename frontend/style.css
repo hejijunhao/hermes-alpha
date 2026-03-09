@@ -1,0 +1,192 @@
+/* ── Reset & Base ──────────────────────────── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg:        #0a0a0f;
+  --bg-panel:  #0e0e16;
+  --red:       #e63946;
+  --red-dim:   #8b1a22;
+  --blue:      #00b4d8;
+  --blue-dim:  #005f73;
+  --green:     #06d6a0;
+  --green-dim: #048a65;
+  --amber:     #f4a261;
+  --text:      #c5c8d4;
+  --text-dim:  #5a5d6e;
+  --border:    #1a1a2e;
+  --font-mono: 'Courier New', 'Consolas', monospace;
+}
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  overflow: hidden;
+}
+
+/* ── Scanline Overlay ─────────────────────── */
+#scanlines {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 999;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.08) 2px,
+    rgba(0, 0, 0, 0.08) 4px
+  );
+}
+
+/* ── Terminal Container ───────────────────── */
+#terminal {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  max-width: 960px;
+  margin: 0 auto;
+  border-left: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+}
+
+/* ── Header ───────────────────────────────── */
+#header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-panel);
+  user-select: none;
+}
+
+.header-left, .header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo {
+  color: var(--red);
+  font-weight: bold;
+  font-size: 16px;
+  letter-spacing: 4px;
+  text-shadow: 0 0 8px var(--red-dim);
+}
+
+.divider {
+  color: var(--text-dim);
+}
+
+.status {
+  color: var(--text-dim);
+  font-size: 11px;
+  letter-spacing: 2px;
+}
+
+.status.online {
+  color: var(--green);
+  text-shadow: 0 0 6px var(--green-dim);
+}
+
+.indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-dim);
+}
+
+.indicator.active {
+  background: var(--green);
+  box-shadow: 0 0 6px var(--green);
+  animation: pulse 2s infinite;
+}
+
+.sync {
+  font-size: 11px;
+  color: var(--text-dim);
+  letter-spacing: 1px;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* ── Output Area ──────────────────────────── */
+#output {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.msg {
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.msg.system {
+  color: var(--amber);
+  font-size: 11px;
+  letter-spacing: 2px;
+  padding: 4px 0;
+  border-left: 2px solid var(--amber);
+  padding-left: 10px;
+}
+
+.msg.user {
+  color: var(--blue);
+}
+
+.msg.user::before {
+  content: '>> ';
+  color: var(--blue-dim);
+}
+
+.msg.assistant {
+  color: var(--text);
+  border-left: 2px solid var(--red-dim);
+  padding-left: 10px;
+}
+
+/* ── Input Bar ────────────────────────────── */
+#input-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+  background: var(--bg-panel);
+}
+
+.prompt {
+  color: var(--blue);
+  font-weight: bold;
+  user-select: none;
+}
+
+#input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  caret-color: var(--blue);
+}
+
+#input::placeholder {
+  color: var(--text-dim);
+  letter-spacing: 2px;
+  font-size: 11px;
+}
