@@ -2,4 +2,4 @@ fastapi==0.115.*
 uvicorn[standard]==0.34.*
 websockets==14.*
 python-dotenv==1.1.*
-hermes-agent[all] @ git+https://github.com/NousResearch/hermes-agent.git
+hermes-agent @ git+https://github.com/NousResearch/hermes-agent.git
