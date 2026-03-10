@@ -2,8 +2,27 @@
 
 ## Index
 
+- [0.2.1 — Fly.io Deployment Fix](#021--flyio-deployment-fix)
 - [0.2.0 — Hermes Agent Integration](#020--hermes-agent-integration)
 - [0.1.0 — Project Scaffolding](#010--project-scaffolding)
+
+---
+
+## 0.2.1 — Fly.io Deployment Fix
+
+**2026-03-10**
+
+Fixed deployment to Fly.io under the `crimson-sun-technologies` org. The app crashed on first connect due to a missing `agent` module in the upstream `hermes-agent` package.
+
+### Changed
+
+- **`fly.toml`** — switched primary region from `ams` to `sin` (Singapore).
+- **Dockerfile** — clones `hermes-agent` from source and patches `pyproject.toml` to include the missing `agent/` package before installing. Upstream omits it from `packages.find`.
+- **`server/requirements.txt`** — removed `hermes-agent` (now installed via Dockerfile clone step); dropped `[all]` extras that pulled unnecessary dependencies and caused build timeouts.
+
+### Fixed
+
+- **`ModuleNotFoundError: No module named 'agent'`** — the upstream `hermes-agent` `pyproject.toml` doesn't list the `agent/` directory in its package includes, so `tools/web_tools.py` fails to import `agent.auxiliary_client` at runtime.
 
 ---
 
