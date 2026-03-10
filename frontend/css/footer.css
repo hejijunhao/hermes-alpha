@@ -1,0 +1,85 @@
+/* ── Telemetry Strip ─────────────────────── */
+#telemetry {
+  display: flex;
+  align-items: center;
+  padding: var(--sp-1) var(--sp-4);
+  border-top: 1px solid var(--border-faint);
+  background: var(--bg-deep);
+  font-size: var(--font-xs);
+  color: var(--text-faint);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  user-select: none;
+  position: relative;
+  overflow: hidden;
+  font-variant-numeric: tabular-nums;
+}
+
+.telem-data {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  z-index: 1;
+}
+
+/* Processing progress bar (background sweep) */
+.telem-bar {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--amber-glow) 50%,
+    transparent 100%
+  );
+  opacity: 0;
+  transform: translateX(-100%);
+  transition: opacity var(--dur-normal) var(--ease-out);
+}
+
+.telem-bar.active {
+  opacity: 1;
+  animation: telem-sweep 2s infinite linear;
+}
+
+/* ── Status Footer ───────────────────────── */
+#status-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--sp-1) var(--sp-4);
+  border-top: 1px solid var(--border-hard);
+  background: var(--bg-panel);
+  font-size: var(--font-xs);
+  color: var(--text-faint);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  user-select: none;
+}
+
+.footer-left {
+  flex-shrink: 0;
+}
+
+.footer-clock {
+  font-variant-numeric: tabular-nums;
+}
+
+.footer-state {
+  flex-shrink: 0;
+  transition: color var(--dur-normal) var(--ease-out);
+}
+
+.footer-state.ready {
+  color: var(--green-dim);
+}
+
+.footer-state.processing {
+  color: var(--amber);
+  animation: pulse 1.5s infinite;
+}
+
+.footer-state.disconnected {
+  color: var(--red);
+  animation: pulse 1s infinite;
+}

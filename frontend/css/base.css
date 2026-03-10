@@ -1,0 +1,175 @@
+/* ── Reset & Base ────────────────────────── */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  background: var(--bg-deep);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: var(--font-base);
+  line-height: 1.6;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--blue-dim);
+  color: var(--text);
+}
+
+/* ── Scanline Overlay ────────────────────── */
+#scanlines {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 900;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.05) 2px,
+    rgba(0, 0, 0, 0.05) 4px
+  );
+}
+
+/* ── Noise Texture ───────────────────────── */
+#noise {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 901;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 256px 256px;
+}
+
+/* ── Vignette ────────────────────────────── */
+#vignette {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 902;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 50%,
+    rgba(0, 0, 0, 0.35) 100%
+  );
+}
+
+/* ── Boot Screen ─────────────────────────── */
+#boot-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-deep);
+  transition: opacity 0.5s var(--ease-out);
+}
+
+#boot-screen.done {
+  opacity: 0;
+  pointer-events: none;
+}
+
+#boot-log {
+  max-width: 600px;
+  width: 100%;
+  padding: var(--sp-6);
+  font-size: var(--font-sm);
+  color: var(--amber);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+#boot-log .boot-line {
+  opacity: 0;
+  white-space: pre;
+  line-height: 2;
+}
+
+#boot-log .boot-line.visible {
+  opacity: 1;
+}
+
+#boot-log .boot-line.title {
+  color: var(--red);
+  font-weight: 700;
+  font-size: var(--font-lg);
+  letter-spacing: 3px;
+  text-shadow: 0 0 10px var(--red-glow);
+}
+
+#boot-log .boot-line.divider {
+  color: var(--border-hard);
+}
+
+#boot-log .boot-line .ok {
+  color: var(--green);
+}
+
+/* ── Terminal Container ──────────────────── */
+#terminal {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  max-width: 1080px;
+  margin: 0 auto;
+  border-left: 1px solid var(--border-hard);
+  border-right: 1px solid var(--border-hard);
+  background: var(--bg);
+  transition: opacity 0.4s var(--ease-out);
+}
+
+#terminal.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ── Corner Accents ──────────────────────── */
+.corner {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  z-index: 10;
+}
+
+.corner-tl {
+  top: -1px;
+  left: -1px;
+  border-top: 2px solid var(--red-dim);
+  border-left: 2px solid var(--red-dim);
+}
+
+.corner-tr {
+  top: -1px;
+  right: -1px;
+  border-top: 2px solid var(--red-dim);
+  border-right: 2px solid var(--red-dim);
+}
+
+.corner-bl {
+  bottom: -1px;
+  left: -1px;
+  border-bottom: 2px solid var(--red-dim);
+  border-left: 2px solid var(--red-dim);
+}
+
+.corner-br {
+  bottom: -1px;
+  right: -1px;
+  border-bottom: 2px solid var(--red-dim);
+  border-right: 2px solid var(--red-dim);
+}
+
+/* ── Utility ─────────────────────────────── */
+.sep {
+  color: var(--text-faint);
+  user-select: none;
+}

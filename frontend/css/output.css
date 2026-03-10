@@ -1,0 +1,239 @@
+/* ── Output Area ─────────────────────────── */
+#output {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--sp-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  contain: content;
+  scroll-behavior: auto;
+
+  /* Custom scrollbar */
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-hard) transparent;
+}
+
+#output::-webkit-scrollbar {
+  width: 4px;
+}
+
+#output::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+#output::-webkit-scrollbar-thumb {
+  background: var(--border-hard);
+  border-radius: 0;
+}
+
+#output::-webkit-scrollbar-thumb:hover {
+  background: var(--blue-dim);
+}
+
+/* ── Message Base ────────────────────────── */
+.msg {
+  display: flex;
+  gap: var(--sp-3);
+  opacity: 0;
+  animation: msg-enter 150ms var(--ease-out) forwards;
+  padding: var(--sp-1) 0;
+}
+
+/* ── Message Gutter ──────────────────────── */
+.msg-gutter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-1);
+  flex-shrink: 0;
+  width: 28px;
+  padding-top: 2px;
+}
+
+.msg-idx {
+  font-size: var(--font-xs);
+  color: var(--text-faint);
+  letter-spacing: 0.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.msg-bar {
+  width: 2px;
+  flex: 1;
+  min-height: 8px;
+  border-radius: 0;
+}
+
+/* ── Message Body ────────────────────────── */
+.msg-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.msg-content {
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.msg-meta {
+  font-size: var(--font-xs);
+  color: var(--text-faint);
+  letter-spacing: 0.5px;
+  margin-top: var(--sp-1);
+  text-transform: uppercase;
+  user-select: none;
+}
+
+/* ── System Messages ─────────────────────── */
+.msg.system .msg-bar {
+  background: var(--amber-dim);
+}
+
+.msg.system .msg-content {
+  color: var(--amber);
+  font-size: var(--font-sm);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+.msg.system.processing .msg-content {
+  animation: pulse 1s infinite;
+}
+
+/* ── User Messages ───────────────────────── */
+.msg.user .msg-bar {
+  background: var(--blue-dim);
+}
+
+.msg.user .msg-content {
+  color: var(--blue);
+}
+
+.msg.user .msg-content::before {
+  content: '>> ';
+  color: var(--blue-dim);
+}
+
+/* ── Assistant Messages ──────────────────── */
+.msg.assistant .msg-bar {
+  background: var(--red-dim);
+}
+
+.msg.assistant .msg-content {
+  color: var(--text);
+}
+
+.msg.assistant:hover .msg-copy {
+  opacity: 1;
+}
+
+/* ── Copy Button ─────────────────────────── */
+.msg-copy {
+  position: absolute;
+  top: var(--sp-1);
+  right: var(--sp-1);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-hard);
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+  font-size: var(--font-xs);
+  letter-spacing: 1px;
+  padding: 2px 6px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease-out),
+              color var(--dur-fast) var(--ease-out),
+              border-color var(--dur-fast) var(--ease-out);
+  text-transform: uppercase;
+}
+
+.msg-copy:hover {
+  color: var(--text);
+  border-color: var(--text-dim);
+}
+
+.msg-copy.copied {
+  color: var(--green);
+  border-color: var(--green-dim);
+}
+
+.msg.assistant .msg-body {
+  position: relative;
+}
+
+/* ── Markdown Styles (assistant messages) ── */
+.msg-content pre.code-block {
+  background: var(--bg-deep);
+  border: 1px solid var(--border-soft);
+  border-left: 2px solid var(--amber-dim);
+  padding: var(--sp-2) var(--sp-3);
+  margin: var(--sp-2) 0;
+  overflow-x: auto;
+  font-size: var(--font-sm);
+  line-height: 1.5;
+  white-space: pre;
+}
+
+.msg-content pre.code-block code {
+  color: var(--text);
+  font-family: var(--font-mono);
+}
+
+.msg-content code.inline-code {
+  background: var(--bg-surface);
+  padding: 1px 5px;
+  font-size: 0.92em;
+  color: var(--amber);
+  border: 1px solid var(--border-faint);
+}
+
+.msg-content strong {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.msg-content em {
+  color: var(--text);
+  font-style: italic;
+}
+
+.msg-content a {
+  color: var(--blue);
+  text-decoration: none;
+  border-bottom: 1px solid var(--blue-dim);
+  transition: border-color var(--dur-fast) var(--ease-out);
+}
+
+.msg-content a:hover {
+  border-color: var(--blue);
+}
+
+/* ── New Messages Indicator ──────────────── */
+.new-messages {
+  position: absolute;
+  bottom: 140px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-hard);
+  color: var(--amber);
+  font-family: var(--font-mono);
+  font-size: var(--font-xs);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: var(--sp-1) var(--sp-3);
+  cursor: pointer;
+  z-index: 10;
+  transition: opacity var(--dur-normal) var(--ease-out);
+}
+
+.new-messages:hover {
+  border-color: var(--amber-dim);
+  box-shadow: 0 0 8px var(--amber-glow);
+}
+
+.new-messages[hidden] {
+  display: none;
+}

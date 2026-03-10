@@ -1,0 +1,121 @@
+/* ── Header ──────────────────────────────── */
+#header {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--sp-4);
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--border-hard);
+  background: var(--bg-panel);
+  user-select: none;
+  position: relative;
+}
+
+/* Bottom border glow */
+#header::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(
+    to bottom,
+    var(--border-hard),
+    transparent
+  );
+  pointer-events: none;
+}
+
+/* Disconnection state: red glow */
+#header.disconnected::after {
+  background: linear-gradient(
+    to bottom,
+    var(--red-dim),
+    transparent
+  );
+}
+
+.header-left,
+.header-center,
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.header-center {
+  justify-content: center;
+  font-size: var(--font-sm);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.header-right {
+  justify-content: flex-end;
+}
+
+/* ── Logo ────────────────────────────────── */
+.logo {
+  color: var(--red);
+  font-weight: 700;
+  font-size: var(--font-lg);
+  letter-spacing: 4px;
+  text-shadow: 0 0 8px var(--red-dim), 0 0 24px var(--red-glow);
+}
+
+.divider {
+  color: var(--text-faint);
+  font-weight: 400;
+}
+
+.subtitle {
+  color: var(--text-dim);
+  font-size: var(--font-sm);
+  letter-spacing: 2px;
+}
+
+/* ── Status ──────────────────────────────── */
+.status {
+  color: var(--text-dim);
+  font-size: var(--font-sm);
+  letter-spacing: 2px;
+  transition: color var(--dur-normal) var(--ease-out),
+              text-shadow var(--dur-normal) var(--ease-out);
+}
+
+.status.online {
+  color: var(--green);
+  text-shadow: 0 0 6px var(--green-dim);
+}
+
+/* ── Indicator Dot ───────────────────────── */
+.indicator {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-dim);
+  flex-shrink: 0;
+  transition: background var(--dur-normal) var(--ease-out),
+              box-shadow var(--dur-normal) var(--ease-out);
+}
+
+.indicator.active {
+  background: var(--green);
+  box-shadow: 0 0 6px var(--green), 0 0 12px var(--green-glow);
+  animation: pulse 2s infinite;
+}
+
+/* ── Sync & Uptime ───────────────────────── */
+.sync,
+.uptime {
+  font-size: var(--font-sm);
+  color: var(--text-dim);
+  letter-spacing: 1px;
+  font-variant-numeric: tabular-nums;
+}
+
+#sync-ratio,
+#uptime {
+  font-variant-numeric: tabular-nums;
+}

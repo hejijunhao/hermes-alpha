@@ -1,0 +1,100 @@
+/* ── Input Bar ───────────────────────────── */
+#input-bar {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-4);
+  border-top: 1px solid var(--border-hard);
+  background: var(--bg-panel);
+  position: relative;
+}
+
+/* Focus glow on bottom border */
+#input-bar::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--border-hard);
+  transition: background var(--dur-normal) var(--ease-out),
+              box-shadow var(--dur-normal) var(--ease-out);
+}
+
+#input-bar.focused::after {
+  background: var(--blue-dim);
+  box-shadow: 0 0 6px var(--blue-glow);
+}
+
+#input-bar.processing::after {
+  animation: border-pulse 1.5s infinite;
+}
+
+/* ── Command Counter ─────────────────────── */
+.cmd-count {
+  font-size: var(--font-xs);
+  color: var(--text-faint);
+  letter-spacing: 0.5px;
+  font-variant-numeric: tabular-nums;
+  padding-top: 3px;
+  user-select: none;
+  min-width: 24px;
+  text-align: right;
+}
+
+/* ── Prompt Symbol ───────────────────────── */
+.prompt {
+  color: var(--blue);
+  font-weight: 700;
+  user-select: none;
+  text-shadow: 0 0 6px var(--blue-glow);
+  padding-top: 1px;
+}
+
+/* ── Text Input ──────────────────────────── */
+#input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: var(--font-md);
+  line-height: 1.6;
+  caret-color: var(--blue);
+  resize: none;
+  overflow: hidden;
+  min-height: 1.6em;
+  max-height: 6em;
+}
+
+#input::placeholder {
+  color: var(--text-faint);
+  letter-spacing: 2px;
+  font-size: var(--font-sm);
+  text-transform: uppercase;
+}
+
+#input:disabled {
+  color: var(--text-dim);
+  caret-color: transparent;
+}
+
+#input:disabled::placeholder {
+  animation: pulse 1.5s infinite;
+}
+
+/* ── Hint ────────────────────────────────── */
+.input-hint {
+  font-size: var(--font-xs);
+  color: var(--text-faint);
+  letter-spacing: 1px;
+  user-select: none;
+  padding-top: 4px;
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+
+#input:placeholder-shown ~ .input-hint {
+  opacity: 0.5;
+}

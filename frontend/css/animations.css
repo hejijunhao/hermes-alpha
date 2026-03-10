@@ -1,0 +1,83 @@
+/* ── Keyframe Animations ─────────────────── */
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+@keyframes msg-enter {
+  from {
+    opacity: 0;
+    transform: translateX(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes telem-sweep {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes border-pulse {
+  0%, 100% {
+    background: var(--amber-dim);
+    box-shadow: 0 0 4px var(--amber-glow);
+  }
+  50% {
+    background: var(--amber);
+    box-shadow: 0 0 8px var(--amber-glow);
+  }
+}
+
+@keyframes cursor-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+@keyframes flash-blue {
+  0% { box-shadow: 0 0 8px var(--blue-glow); }
+  100% { box-shadow: none; }
+}
+
+@keyframes flash-green {
+  0% { border-color: var(--green); }
+  100% { border-color: var(--border-hard); }
+}
+
+/* ── Streaming cursor ────────────────────── */
+.streaming-cursor {
+  display: inline;
+  color: var(--text);
+  animation: cursor-blink 800ms step-end infinite;
+}
+
+/* ── Reduced Motion ──────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  #scanlines,
+  #noise,
+  #vignette {
+    display: none;
+  }
+
+  .msg {
+    opacity: 1;
+  }
+
+  #boot-screen {
+    display: none;
+  }
+
+  #terminal.hidden {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}

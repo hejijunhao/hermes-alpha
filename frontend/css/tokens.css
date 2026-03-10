@@ -1,0 +1,63 @@
+/* ── Design Tokens ────────────────────────── */
+/* Single source of truth for the visual       */
+/* language. Every value derives from here.    */
+
+:root {
+  /* ── Backgrounds (depth layers) ──────────── */
+  --bg-deep:     #06060b;
+  --bg:          #0a0a0f;
+  --bg-panel:    #0e0e16;
+  --bg-surface:  #12121e;
+  --bg-overlay:  rgba(10, 10, 15, 0.88);
+
+  /* ── Accent: Red ─────────────────────────── */
+  --red:         #e63946;
+  --red-dim:     #8b1a22;
+  --red-glow:    rgba(230, 57, 70, 0.15);
+
+  /* ── Accent: Blue ────────────────────────── */
+  --blue:        #00b4d8;
+  --blue-dim:    #005f73;
+  --blue-glow:   rgba(0, 180, 216, 0.12);
+
+  /* ── Accent: Green ───────────────────────── */
+  --green:       #06d6a0;
+  --green-dim:   #048a65;
+  --green-glow:  rgba(6, 214, 160, 0.12);
+
+  /* ── Accent: Amber ───────────────────────── */
+  --amber:       #f4a261;
+  --amber-dim:   #a36b3a;
+  --amber-glow:  rgba(244, 162, 97, 0.12);
+
+  /* ── Text ────────────────────────────────── */
+  --text:        #c5c8d4;
+  --text-dim:    #5a5d6e;
+  --text-faint:  #33354a;
+
+  /* ── Borders (tiered) ────────────────────── */
+  --border-hard: #1e1e34;
+  --border-soft: #14142a;
+  --border-faint:#0f0f1e;
+
+  /* ── Typography ──────────────────────────── */
+  --font-mono:   'IBM Plex Mono', 'Consolas', 'Courier New', monospace;
+  --font-xs:     9px;
+  --font-sm:     11px;
+  --font-base:   13px;
+  --font-md:     14px;
+  --font-lg:     16px;
+
+  /* ── Spacing (4px base unit) ─────────────── */
+  --sp-1:  4px;
+  --sp-2:  8px;
+  --sp-3:  12px;
+  --sp-4:  16px;
+  --sp-6:  24px;
+  --sp-8:  32px;
+
+  /* ── Transitions ─────────────────────────── */
+  --ease-out:    cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --dur-fast:    100ms;
+  --dur-normal:  200ms;
+}

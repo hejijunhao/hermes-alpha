@@ -2,12 +2,62 @@
 
 ## Index
 
+- [0.4.0 — Frontend Overhaul](#040--frontend-overhaul)
 - [0.3.1 — Model Dropdown Loading Fix](#031--model-dropdown-loading-fix)
 - [0.3.0 — Dynamic Model Switching & Nous Direct API](#030--dynamic-model-switching--nous-direct-api)
 - [0.2.2 — PYTHONPATH Install Strategy](#022--pythonpath-install-strategy)
 - [0.2.1 — Fly.io Deployment Fix](#021--flyio-deployment-fix)
 - [0.2.0 — Hermes Agent Integration](#020--hermes-agent-integration)
 - [0.1.0 — Project Scaffolding](#010--project-scaffolding)
+
+---
+
+## 0.4.0 — Frontend Overhaul
+
+**2026-03-10**
+
+Complete frontend rewrite from a 3-file prototype to a modular, production-grade terminal UI. Deepens the Evangelion retrofuturist aesthetic with layered atmospheric effects, structured message rendering, and a strict design token system — while staying zero-dependency vanilla JS with no build step. See [`completions/001-frontend-overhaul.md`](completions/001-frontend-overhaul.md) for full implementation notes.
+
+### Added
+
+- **Boot sequence** (`js/boot.js`, `css/base.css`) — cinematic startup animation with sequential line reveals ("INITIALIZING NEURAL LINK... OK") before the terminal fades in. Skipped under `prefers-reduced-motion`.
+- **Custom model selector** (`js/model-selector.js`, `css/model-selector.css`) — replaces the native `<select>` with a fully styled dropdown panel. Models grouped by provider with size/provider tags, amber accent glow, full keyboard navigation (Arrow keys, Enter, Escape), click-outside dismiss.
+- **Telemetry strip** (`css/footer.css`) — thin ornamental bar between output and input showing message count, iteration placeholder, and latency placeholder. Animated amber sweep bar during processing state.
+- **Status footer** (`js/telemetry.js`, `css/footer.css`) — persistent bar with version string, live clock (updates every second), and connection state indicator: `● READY` (green), `● PROCESSING` (amber, pulsing), `● LINK SEVERED` (red, pulsing).
+- **Uptime counter** (`js/telemetry.js`) — `T+HH:MM:SS` in the header center, tracking time since WebSocket connect.
+- **Structured messages** (`js/messages.js`, `css/output.css`) — each message now has a gutter (3-digit index + type-colored bar), body, and metadata row (timestamp, model name). Type bars: amber (system), blue (user), red (assistant).
+- **Markdown rendering** (`js/messages.js`) — assistant messages rendered with safe markdown: code blocks, inline code, bold, italic, links (http/https only). HTML-escaped first, then regex-transformed — no XSS vectors. User/system messages use `textContent`.
+- **Copy to clipboard** (`js/messages.js`, `css/output.css`) — assistant messages show a COPY button on hover. Click copies raw text; button briefly shows "COPIED" in green.
+- **Smart auto-scroll** (`js/messages.js`) — detects when user has scrolled up to read history. New messages arrive without forcing scroll; a "NEW MESSAGES ▾" button appears to jump back to bottom.
+- **Atmospheric overlays** (`css/base.css`) — three stacking layers: scanlines (5% opacity), SVG fractal noise texture (2.5% opacity), and radial vignette (35% at edges). All `pointer-events: none`, disabled on mobile for performance.
+- **Corner accents** (`css/base.css`) — four decorative L-shaped corner marks in `--red-dim` on the terminal frame.
+- **Multiline input** — `<textarea>` replaces `<input>`, auto-resizes on typing (up to 6em max). Enter submits, Shift+Enter for newlines. Command counter in left gutter, `[ENTER]` hint on right.
+- **Input focus/processing states** (`css/input.css`) — bottom border glows blue on focus, pulses amber during processing.
+- **Message transitions** (`css/animations.css`) — new messages fade in with `opacity 0→1` + subtle `translateX(-4px→0)` over 150ms.
+- **Responsive breakpoints** (`css/responsive.css`) — 768px (header collapses, centered layout) and 480px (border frame removed, telemetry hidden, CRT effects disabled, larger touch targets).
+- **Accessibility** — semantic HTML (`<header>`, `<main>`, `<footer>`), ARIA roles (`log`, `listbox`, `option`), `aria-live="polite"`, `aria-expanded`, `aria-label` on all interactive elements, `prefers-reduced-motion` support (all animations disabled, overlays hidden, boot skipped).
+
+### Changed
+
+- **Typography** — switched from system `Courier New`/`Consolas` to IBM Plex Mono (Google Fonts CDN). Strict 5-level type scale from 9px to 16px. All UI chrome uppercase with tracked letter-spacing.
+- **Design token system** (`css/tokens.css`) — all visual values extracted into CSS custom properties: 5 background depth layers, 4 accent colors × 3 tiers (full/dim/glow), 3 border tiers, 4px-base spacing scale, transition timing tokens.
+- **Header** (`css/header.css`) — redesigned as 3-column CSS grid (logo | status+sync+uptime | model selector). Bottom border glow via gradient pseudo-element; shifts red on disconnect.
+- **Processing indicator** — replaced verbose "PROCESSING..." text with minimal `···`, plus multi-indicator feedback across telemetry strip, input bar, and status footer.
+- **Connection resilience** (`js/connection.js`) — exponential backoff reconnection (1s → 2s → 4s → ... → 30s max), reset on successful connect. Replaces fixed 3-second retry.
+- **State management** (`js/terminal.js`) — centralised state object with `getState()`/`setState(patch)` and observer pattern via `subscribe()`. Replaces scattered global variables.
+- **Max width** — terminal container widened from 960px to 1080px.
+- **Scrollbar** — custom 4px-wide scrollbar with `--blue-dim` thumb on hover.
+
+### Architecture
+
+- **ES modules** — `frontend/main.js` (monolithic, 145 lines) replaced by 7 native ES modules in `frontend/js/` (~800 lines total). Clean dependency graph with no circular imports: `terminal.js` (leaf) → `connection.js`, `messages.js`, `telemetry.js`, `boot.js` → `model-selector.js` → `main.js` (entry).
+- **CSS modules** — `frontend/style.css` (228 lines) refactored into 9 CSS files in `frontend/css/` (~450 lines total), imported via a single `style.css` entry point using `@import`.
+- **No new dependencies** — remains zero-dep vanilla JS. No build step, no bundler, no framework. IBM Plex Mono loaded via Google Fonts CDN.
+
+### Removed
+
+- **`frontend/main.js`** (root-level) — replaced by `frontend/js/main.js` ES module entry point.
+- **Native `<select>` model dropdown** — replaced by custom dropdown component.
 
 ---
 

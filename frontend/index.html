@@ -4,31 +4,94 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>HERMES // TERMINAL</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-  <div id="scanlines"></div>
-  <div id="terminal">
+
+  <!-- Atmospheric overlays -->
+  <div id="scanlines" aria-hidden="true"></div>
+  <div id="noise" aria-hidden="true"></div>
+  <div id="vignette" aria-hidden="true"></div>
+
+  <!-- Boot sequence -->
+  <div id="boot-screen" aria-label="System boot sequence">
+    <div id="boot-log"></div>
+  </div>
+
+  <!-- Terminal frame -->
+  <div id="terminal" class="hidden" role="application" aria-label="Hermes Terminal">
+
+    <!-- Corner accents (decorative) -->
+    <div class="corner corner-tl" aria-hidden="true"></div>
+    <div class="corner corner-tr" aria-hidden="true"></div>
+    <div class="corner corner-bl" aria-hidden="true"></div>
+    <div class="corner corner-br" aria-hidden="true"></div>
+
     <header id="header">
       <div class="header-left">
         <span class="logo">HERMES</span>
         <span class="divider">//</span>
+        <span class="subtitle">TERMINAL</span>
+      </div>
+      <div class="header-center">
+        <span class="indicator" id="indicator"></span>
         <span class="status" id="status">OFFLINE</span>
+        <span class="sep" aria-hidden="true">│</span>
+        <span class="sync">SYN:<span id="sync-ratio">000.00</span>%</span>
+        <span class="sep" aria-hidden="true">│</span>
+        <span class="uptime" id="uptime">T+00:00:00</span>
       </div>
       <div class="header-right">
-        <select id="model-select" title="Select model">
-          <option value="">LOADING...</option>
-        </select>
-        <span class="indicator" id="indicator"></span>
-        <span class="sync">SYNC <span id="sync-ratio">000.00</span>%</span>
+        <div class="model-selector" id="model-selector">
+          <button class="model-trigger" id="model-trigger" aria-haspopup="listbox" aria-expanded="false">
+            <span class="model-label" id="model-label">LOADING...</span>
+            <span class="model-arrow" aria-hidden="true">▾</span>
+          </button>
+          <div class="model-dropdown" id="model-dropdown" role="listbox" aria-label="Select model" hidden>
+          </div>
+        </div>
       </div>
     </header>
-    <main id="output"></main>
-    <footer id="input-bar">
+
+    <main id="output" role="log" aria-live="polite" aria-label="Message output"></main>
+
+    <!-- New messages indicator (when scrolled up) -->
+    <button class="new-messages" id="new-messages" hidden aria-label="Scroll to new messages">NEW MESSAGES ▾</button>
+
+    <!-- Telemetry strip -->
+    <div id="telemetry" aria-hidden="true">
+      <div class="telem-data">
+        <span>T:<span id="telem-msgs">0000</span></span>
+        <span class="sep">│</span>
+        <span>ITER:<span id="telem-iter">--</span>/10</span>
+        <span class="sep">│</span>
+        <span>MEM:—</span>
+        <span class="sep">│</span>
+        <span>LATENCY:<span id="telem-latency">—</span></span>
+      </div>
+      <div class="telem-bar" id="telem-bar"></div>
+    </div>
+
+    <!-- Input bar -->
+    <div id="input-bar">
+      <span class="cmd-count" id="cmd-count">000</span>
       <span class="prompt">&gt;&gt;</span>
-      <input type="text" id="input" autocomplete="off" autofocus placeholder="ENTER COMMAND" />
+      <textarea id="input" rows="1" autocomplete="off" autofocus placeholder="ENTER COMMAND" aria-label="Command input"></textarea>
+      <span class="input-hint" aria-hidden="true">[ENTER]</span>
+    </div>
+
+    <!-- Status footer -->
+    <footer id="status-footer">
+      <span class="footer-left">HERMES v0.3.0 // CRIMSON SUN</span>
+      <span class="footer-clock" id="clock"></span>
+      <span class="footer-state" id="footer-status">● READY</span>
     </footer>
+
   </div>
-  <script src="/static/main.js"></script>
+
+  <script type="module" src="/static/js/main.js"></script>
 </body>
 </html>

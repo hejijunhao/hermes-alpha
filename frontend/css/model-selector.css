@@ -1,0 +1,123 @@
+/* ── Model Selector ──────────────────────── */
+.model-selector {
+  position: relative;
+}
+
+.model-trigger {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  background: var(--bg);
+  color: var(--amber);
+  border: 1px solid var(--border-hard);
+  font-family: var(--font-mono);
+  font-size: var(--font-xs);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: var(--sp-1) var(--sp-2);
+  cursor: pointer;
+  outline: none;
+  transition: border-color var(--dur-fast) var(--ease-out),
+              box-shadow var(--dur-fast) var(--ease-out);
+  max-width: 220px;
+}
+
+.model-trigger:hover,
+.model-trigger:focus-visible {
+  border-color: var(--amber-dim);
+  box-shadow: 0 0 6px var(--amber-glow);
+}
+
+.model-trigger[aria-expanded="true"] {
+  border-color: var(--amber);
+  box-shadow: 0 0 8px var(--amber-glow);
+}
+
+.model-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.model-arrow {
+  color: var(--text-dim);
+  font-size: var(--font-sm);
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+
+.model-trigger[aria-expanded="true"] .model-arrow {
+  transform: rotate(180deg);
+}
+
+/* ── Dropdown Panel ──────────────────────── */
+.model-dropdown {
+  position: absolute;
+  top: calc(100% + var(--sp-1));
+  right: 0;
+  min-width: 260px;
+  max-height: 320px;
+  overflow-y: auto;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-hard);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5),
+              0 0 8px var(--amber-glow);
+  z-index: 100;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-hard) transparent;
+
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity var(--dur-fast) var(--ease-out),
+              transform var(--dur-fast) var(--ease-out);
+}
+
+.model-dropdown.open {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.model-dropdown[hidden] {
+  display: none;
+}
+
+/* ── Provider Group ──────────────────────── */
+.model-group-label {
+  padding: var(--sp-2) var(--sp-3) var(--sp-1);
+  font-size: var(--font-xs);
+  color: var(--red);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  font-weight: 700;
+  border-bottom: 1px solid var(--border-faint);
+}
+
+/* ── Model Option ────────────────────────── */
+.model-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--sp-2) var(--sp-3);
+  font-size: var(--font-sm);
+  color: var(--text);
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  border-left: 2px solid transparent;
+  transition: background var(--dur-fast) var(--ease-out),
+              border-color var(--dur-fast) var(--ease-out);
+}
+
+.model-option:hover,
+.model-option.focused {
+  background: var(--bg-surface);
+}
+
+.model-option.active {
+  border-left-color: var(--amber);
+  color: var(--amber);
+}
+
+.model-option .model-tag {
+  font-size: var(--font-xs);
+  color: var(--text-faint);
+  letter-spacing: 1px;
+}
