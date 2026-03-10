@@ -2,11 +2,30 @@
 
 ## Index
 
+- [0.3.1 — Model Dropdown Loading Fix](#031--model-dropdown-loading-fix)
 - [0.3.0 — Dynamic Model Switching & Nous Direct API](#030--dynamic-model-switching--nous-direct-api)
 - [0.2.2 — PYTHONPATH Install Strategy](#022--pythonpath-install-strategy)
 - [0.2.1 — Fly.io Deployment Fix](#021--flyio-deployment-fix)
 - [0.2.0 — Hermes Agent Integration](#020--hermes-agent-integration)
 - [0.1.0 — Project Scaffolding](#010--project-scaffolding)
+
+---
+
+## 0.3.1 — Model Dropdown Loading Fix
+
+**2026-03-10**
+
+The model selector dropdown in the terminal header could get stuck on "LOADING..." indefinitely, particularly when the Fly.io machine was waking from auto-stop. The root cause was that the WebSocket connection was chained after the model fetch — if the fetch hung, the entire terminal was unresponsive.
+
+### Fixed
+
+- **Perpetual "LOADING..." dropdown** (`frontend/main.js`) — decoupled `loadModels()` from `connect()` so they run in parallel. The terminal now connects immediately while models load in the background.
+- **Fetch timeout** (`frontend/main.js`) — added an 8-second `AbortController` timeout to the `/api/models` fetch. On timeout or error the dropdown shows "UNAVAILABLE" instead of hanging on "LOADING..." forever.
+- **Late config sync** (`frontend/main.js`) — if the WebSocket connects before models finish loading, the selected model config is now sent once `loadModels()` completes, ensuring the server always knows the active model.
+
+### Changed
+
+- **`frontend/main.js`** — empty provider responses now show "NO MODELS" instead of leaving the dropdown blank.
 
 ---
 

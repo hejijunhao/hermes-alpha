@@ -14,7 +14,10 @@ let currentProvider = null;
 // Fetch available models and populate the dropdown
 async function loadModels() {
   try {
-    const res = await fetch('/api/models');
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+    const res = await fetch('/api/models', { signal: controller.signal });
+    clearTimeout(timeout);
     const providers = await res.json();
     modelSelect.innerHTML = '';
     providers.forEach(prov => {
@@ -33,6 +36,12 @@ async function loadModels() {
       const first = JSON.parse(modelSelect.value);
       currentModel = first.model;
       currentProvider = first.provider;
+      // If WS connected before models loaded, send config now
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'config', model: currentModel, provider: currentProvider }));
+      }
+    } else {
+      modelSelect.innerHTML = '<option value="">NO MODELS</option>';
     }
   } catch (e) {
     modelSelect.innerHTML = '<option value="">UNAVAILABLE</option>';
@@ -141,4 +150,6 @@ input.addEventListener('keydown', (e) => {
   }
 });
 
-loadModels().then(connect);
+// Start both in parallel — don't let model loading block the terminal
+connect();
+loadModels();
