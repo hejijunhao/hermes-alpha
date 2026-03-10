@@ -1,0 +1,12 @@
+services:
+  hermes-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8080"
+    env_file:
+      - ../.env
+    environment:
+      - TTYD_USER=${TTYD_USER:-}
+      - TTYD_PASS=${TTYD_PASS:-}

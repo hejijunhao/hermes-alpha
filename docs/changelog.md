@@ -2,6 +2,7 @@
 
 ## Index
 
+- [1.0.0 — Hermes Agent Gateway](#100--hermes-agent-gateway)
 - [0.4.1 — Agent Timeout Guard](#041--agent-timeout-guard)
 - [0.4.0 — Frontend Overhaul](#040--frontend-overhaul)
 - [0.3.1 — Model Dropdown Loading Fix](#031--model-dropdown-loading-fix)
@@ -10,6 +11,32 @@
 - [0.2.1 — Fly.io Deployment Fix](#021--flyio-deployment-fix)
 - [0.2.0 — Hermes Agent Integration](#020--hermes-agent-integration)
 - [0.1.0 — Project Scaffolding](#010--project-scaffolding)
+
+---
+
+## 1.0.0 — Hermes Agent Gateway
+
+**2026-03-10**
+
+Added a second deployable app — `gateway/` — that runs the stock Hermes agent CLI in a browser-accessible web terminal. This gives full access to the native `hermes chat` experience (multiline editing, slash commands, rich output, tool use) from any browser, without installing anything locally. Deployed to the same Fly.io machine as the custom web terminal; the two apps share the monorepo but deploy independently.
+
+### Added
+
+- **Web terminal gateway** (`gateway/`) — a self-contained FastAPI app that spawns the `hermes` CLI in a real pseudo-terminal (PTY) and bridges it to the browser via xterm.js over WebSocket. Replaces the initially considered `ttyd` approach with a custom ~120-line Python PTY bridge, giving full control over auth and UI.
+- **Styled login page** (`gateway/static/login.html`) — cookie-based authentication with HMAC-signed session tokens, replacing the browser's native HTTP Basic Auth popup. Matches the Evangelion design language: dark panels, red corner accents, scanline overlay, IBM Plex Mono typography.
+- **Provider switcher** (`gateway/static/terminal.html`) — header dropdown to choose between Nous Direct and OpenRouter before connecting. Each session can use a different provider without redeploying. Spawns `hermes chat --provider <choice>` per session.
+- **xterm.js terminal** (`gateway/static/terminal.html`) — full terminal emulator in the browser with the project's color palette, PTY resize support, web link detection, and hidden scrollbar. Header shows connection status with live indicator; footer shows active provider and session start time.
+- **Entrypoint script** (`gateway/entrypoint.sh`) — injects Fly.io secrets (`OPENROUTER_API_KEY`, `HERMES_API_KEY`, etc.) into the hermes `~/.hermes/.env` config at container boot, bridging Fly's secret management to the CLI's expected config format.
+- **Dockerfile** (`gateway/Dockerfile`) — clones `hermes-agent` with all extras (`pip install -e ".[all]"`), installs FastAPI + uvicorn, scaffolds the `~/.hermes/` directory structure the CLI expects, and copies the web app.
+- **Fly.io config** (`gateway/fly.toml`) — targets the existing `hermes-terminal` app with `min_machines_running: 0` for cost efficiency (cold-starts on first visit). 1GB RAM to support concurrent CLI sessions.
+- **Docker Compose** (`gateway/docker-compose.yml`) — local testing on port 8081, reads from the shared `.env` file.
+- **Makefile targets** — `gateway-up`, `gateway-down`, `gateway-deploy`, `gateway-logs`, `gateway-ssh`, `gateway-status` mirror the existing web terminal commands.
+
+### Architecture
+
+The gateway is fully independent from the custom web terminal (`server/` + `frontend/`). Both live in the same monorepo and deploy to the same Fly.io app — `make deploy` ships the custom web terminal, `make gateway-deploy` ships the stock CLI gateway. Only one can be active at a time on the shared machine.
+
+The PTY bridge works by calling `pty.openpty()` to create a master/slave pair, spawning `hermes chat` attached to the slave fd, then using `asyncio`'s `add_reader()` on the master fd to asynchronously shuttle bytes between the PTY and the WebSocket. Terminal resize events are forwarded via `TIOCSWINSZ` ioctl. Each browser tab gets an independent hermes process and conversation.
 
 ---
 

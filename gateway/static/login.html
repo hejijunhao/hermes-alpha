@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HERMES // AUTH</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-deep:    #06060b;
+      --bg:         #0a0a0f;
+      --bg-panel:   #0e0e16;
+      --bg-surface: #12121e;
+      --red:        #e63946;
+      --red-dim:    #8b1a22;
+      --red-glow:   rgba(230, 57, 70, 0.15);
+      --blue:       #00b4d8;
+      --blue-dim:   #005f73;
+      --green:      #06d6a0;
+      --amber:      #f4a261;
+      --text:       #c5c8d4;
+      --text-dim:   #5a5d6e;
+      --text-faint: #33354a;
+      --border-hard:#1e1e34;
+      --font-mono:  'IBM Plex Mono', 'Consolas', monospace;
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      height: 100%;
+      background: var(--bg-deep);
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    /* Scanlines */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 900;
+      background: repeating-linear-gradient(
+        0deg, transparent, transparent 2px,
+        rgba(0,0,0,0.05) 2px, rgba(0,0,0,0.05) 4px
+      );
+    }
+
+    /* Vignette */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 901;
+      background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.4) 100%);
+    }
+
+    .auth-frame {
+      position: relative;
+      width: 420px;
+      border: 1px solid var(--border-hard);
+      background: var(--bg);
+    }
+
+    /* Corner accents */
+    .auth-frame::before, .auth-frame::after {
+      content: '';
+      position: absolute;
+      width: 12px;
+      height: 12px;
+    }
+    .auth-frame::before {
+      top: -1px; left: -1px;
+      border-top: 2px solid var(--red-dim);
+      border-left: 2px solid var(--red-dim);
+    }
+    .auth-frame::after {
+      top: -1px; right: -1px;
+      border-top: 2px solid var(--red-dim);
+      border-right: 2px solid var(--red-dim);
+    }
+
+    .corner-bl, .corner-br {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+    }
+    .corner-bl {
+      bottom: -1px; left: -1px;
+      border-bottom: 2px solid var(--red-dim);
+      border-left: 2px solid var(--red-dim);
+    }
+    .corner-br {
+      bottom: -1px; right: -1px;
+      border-bottom: 2px solid var(--red-dim);
+      border-right: 2px solid var(--red-dim);
+    }
+
+    .auth-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border-hard);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .auth-header .logo {
+      color: var(--red);
+      font-weight: 700;
+      font-size: 16px;
+      letter-spacing: 3px;
+      text-shadow: 0 0 10px var(--red-glow);
+    }
+
+    .auth-header .divider {
+      color: var(--text-faint);
+    }
+
+    .auth-header .subtitle {
+      color: var(--text-dim);
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .auth-body {
+      padding: 24px 20px;
+    }
+
+    .auth-label {
+      display: block;
+      font-size: 9px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 8px;
+    }
+
+    .auth-input {
+      width: 100%;
+      padding: 10px 12px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border-hard);
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .auth-input:focus {
+      border-color: var(--blue-dim);
+      box-shadow: 0 0 0 1px var(--blue-dim);
+    }
+
+    .auth-input::placeholder {
+      color: var(--text-faint);
+    }
+
+    .auth-submit {
+      width: 100%;
+      margin-top: 16px;
+      padding: 10px;
+      background: var(--red-dim);
+      border: 1px solid var(--red-dim);
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+    }
+
+    .auth-submit:hover {
+      background: var(--red);
+      border-color: var(--red);
+    }
+
+    .auth-error {
+      margin-top: 12px;
+      padding: 8px 12px;
+      background: rgba(230, 57, 70, 0.08);
+      border-left: 2px solid var(--red);
+      color: var(--red);
+      font-size: 11px;
+      display: none;
+    }
+
+    .auth-error.visible {
+      display: block;
+    }
+
+    .auth-footer {
+      padding: 12px 20px;
+      border-top: 1px solid var(--border-hard);
+      font-size: 9px;
+      color: var(--text-faint);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="auth-frame">
+    <div class="corner-bl"></div>
+    <div class="corner-br"></div>
+
+    <div class="auth-header">
+      <span class="logo">HERMES</span>
+      <span class="divider">//</span>
+      <span class="subtitle">Authentication Required</span>
+    </div>
+
+    <form class="auth-body" method="POST" action="/login">
+      <label class="auth-label" for="password">Access Code</label>
+      <input
+        class="auth-input"
+        type="password"
+        id="password"
+        name="password"
+        placeholder="Enter access code..."
+        autofocus
+        required
+      >
+      <button class="auth-submit" type="submit">Authenticate</button>
+      <div class="auth-error" id="error">ACCESS DENIED — Invalid credentials</div>
+    </form>
+
+    <div class="auth-footer">Secure Terminal Access // Nous Research</div>
+  </div>
+
+  <script>
+    if (location.search.includes('error=1')) {
+      document.getElementById('error').classList.add('visible');
+    }
+  </script>
+</body>
+</html>

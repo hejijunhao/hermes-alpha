@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HERMES // AGENT</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/css/xterm.min.css">
+  <style>
+    :root {
+      --bg-deep:    #06060b;
+      --bg:         #0a0a0f;
+      --bg-panel:   #0e0e16;
+      --bg-surface: #12121e;
+      --red:        #e63946;
+      --red-dim:    #8b1a22;
+      --red-glow:   rgba(230, 57, 70, 0.15);
+      --blue:       #00b4d8;
+      --blue-dim:   #005f73;
+      --green:      #06d6a0;
+      --green-dim:  #048a65;
+      --amber:      #f4a261;
+      --text:       #c5c8d4;
+      --text-dim:   #5a5d6e;
+      --text-faint: #33354a;
+      --border-hard:#1e1e34;
+      --font-mono:  'IBM Plex Mono', 'Consolas', monospace;
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      height: 100%;
+      background: var(--bg-deep);
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 13px;
+      overflow: hidden;
+    }
+
+    /* Scanlines */
+    #scanlines {
+      position: fixed; inset: 0;
+      pointer-events: none; z-index: 900;
+      background: repeating-linear-gradient(
+        0deg, transparent, transparent 2px,
+        rgba(0,0,0,0.05) 2px, rgba(0,0,0,0.05) 4px
+      );
+    }
+
+    /* Layout */
+    .shell {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      background: var(--bg);
+      position: relative;
+    }
+
+    /* Corner accents */
+    .corner { position: absolute; width: 12px; height: 12px; z-index: 10; }
+    .corner-tl { top: -1px; left: -1px; border-top: 2px solid var(--red-dim); border-left: 2px solid var(--red-dim); }
+    .corner-tr { top: -1px; right: -1px; border-top: 2px solid var(--red-dim); border-right: 2px solid var(--red-dim); }
+    .corner-bl { bottom: -1px; left: -1px; border-bottom: 2px solid var(--red-dim); border-left: 2px solid var(--red-dim); }
+    .corner-br { bottom: -1px; right: -1px; border-bottom: 2px solid var(--red-dim); border-right: 2px solid var(--red-dim); }
+
+    /* Header */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border-hard);
+      background: var(--bg-panel);
+      flex-shrink: 0;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .logo {
+      color: var(--red);
+      font-weight: 700;
+      font-size: 14px;
+      letter-spacing: 3px;
+      text-shadow: 0 0 10px var(--red-glow);
+    }
+
+    .divider { color: var(--text-faint); }
+
+    .subtitle {
+      color: var(--text-dim);
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .header-center {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+    }
+
+    .indicator {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--text-faint);
+      transition: background 0.3s;
+    }
+    .indicator.connected { background: var(--green); box-shadow: 0 0 6px var(--green-dim); }
+    .indicator.error { background: var(--red); }
+
+    .status { color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; }
+    .sep { color: var(--text-faint); user-select: none; }
+
+    /* Provider selector */
+    .provider-select {
+      padding: 4px 8px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-hard);
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 1px;
+      cursor: pointer;
+      outline: none;
+      appearance: none;
+      -webkit-appearance: none;
+      text-transform: uppercase;
+    }
+
+    .provider-select:focus {
+      border-color: var(--blue-dim);
+    }
+
+    .provider-select option {
+      background: var(--bg-panel);
+      color: var(--text);
+    }
+
+    .connect-btn {
+      padding: 4px 12px;
+      background: var(--green-dim);
+      border: 1px solid var(--green-dim);
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .connect-btn:hover { background: var(--green); }
+    .connect-btn:disabled { opacity: 0.4; cursor: default; }
+
+    /* Terminal */
+    #terminal-container {
+      flex: 1;
+      padding: 4px;
+      overflow: hidden;
+    }
+
+    .xterm { height: 100%; }
+    .xterm-viewport::-webkit-scrollbar { display: none; }
+    .xterm-viewport { scrollbar-width: none; }
+
+    /* Footer */
+    footer {
+      padding: 6px 16px;
+      border-top: 1px solid var(--border-hard);
+      background: var(--bg-panel);
+      font-size: 9px;
+      color: var(--text-faint);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      display: flex;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+  <div id="scanlines"></div>
+
+  <div class="shell">
+    <div class="corner corner-tl"></div>
+    <div class="corner corner-tr"></div>
+    <div class="corner corner-bl"></div>
+    <div class="corner corner-br"></div>
+
+    <header>
+      <div class="header-left">
+        <span class="logo">HERMES</span>
+        <span class="divider">//</span>
+        <span class="subtitle">AGENT</span>
+      </div>
+      <div class="header-center">
+        <span class="indicator" id="indicator"></span>
+        <span class="status" id="status">DISCONNECTED</span>
+      </div>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <select class="provider-select" id="provider">
+          <option value="nous">NOUS DIRECT</option>
+          <option value="openrouter" selected>OPENROUTER</option>
+        </select>
+        <button class="connect-btn" id="connect-btn">CONNECT</button>
+      </div>
+    </header>
+
+    <div id="terminal-container"></div>
+
+    <footer>
+      <span>PTY SESSION</span>
+      <span id="session-info">—</span>
+    </footer>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/lib/xterm.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@xterm/addon-fit@0.10.0/lib/addon-fit.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@xterm/addon-web-links@0.11.0/lib/addon-web-links.min.js"></script>
+  <script>
+    const term = new window.Terminal({
+      fontFamily: "'IBM Plex Mono', 'Consolas', monospace",
+      fontSize: 13,
+      lineHeight: 1.4,
+      cursorBlink: true,
+      cursorStyle: 'bar',
+      theme: {
+        background:   '#0a0a0f',
+        foreground:   '#c5c8d4',
+        cursor:       '#e63946',
+        cursorAccent: '#0a0a0f',
+        selectionBackground: '#005f73',
+        black:   '#06060b',
+        red:     '#e63946',
+        green:   '#06d6a0',
+        yellow:  '#f4a261',
+        blue:    '#00b4d8',
+        magenta: '#8b1a22',
+        cyan:    '#005f73',
+        white:   '#c5c8d4',
+        brightBlack:   '#5a5d6e',
+        brightRed:     '#e63946',
+        brightGreen:   '#06d6a0',
+        brightYellow:  '#f4a261',
+        brightBlue:    '#00b4d8',
+        brightMagenta: '#8b1a22',
+        brightCyan:    '#00b4d8',
+        brightWhite:   '#ffffff',
+      },
+    });
+
+    const fitAddon = new window.FitAddon.FitAddon();
+    const webLinksAddon = new window.WebLinksAddon.WebLinksAddon();
+    term.loadAddon(fitAddon);
+    term.loadAddon(webLinksAddon);
+    term.open(document.getElementById('terminal-container'));
+    fitAddon.fit();
+
+    const indicator = document.getElementById('indicator');
+    const statusEl  = document.getElementById('status');
+    const providerEl = document.getElementById('provider');
+    const connectBtn = document.getElementById('connect-btn');
+    const sessionInfo = document.getElementById('session-info');
+
+    let ws = null;
+    let sessionStart = null;
+
+    function setStatus(state, label) {
+      indicator.className = 'indicator ' + state;
+      statusEl.textContent = label;
+    }
+
+    function connect() {
+      if (ws && ws.readyState <= 1) {
+        ws.close();
+      }
+
+      term.reset();
+      const provider = providerEl.value;
+      const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const url = `${proto}//${location.host}/ws?provider=${provider}`;
+
+      setStatus('', 'CONNECTING...');
+      connectBtn.disabled = true;
+      providerEl.disabled = true;
+
+      ws = new WebSocket(url);
+
+      ws.onopen = () => {
+        setStatus('connected', 'CONNECTED');
+        sessionStart = Date.now();
+        sessionInfo.textContent = provider.toUpperCase() + ' // ' + new Date().toLocaleTimeString();
+
+        // Send initial size
+        ws.send(JSON.stringify({ type: 'resize', cols: term.cols, rows: term.rows }));
+      };
+
+      ws.onmessage = (e) => {
+        term.write(e.data);
+      };
+
+      ws.onclose = () => {
+        setStatus('error', 'DISCONNECTED');
+        connectBtn.disabled = false;
+        providerEl.disabled = false;
+        term.write('\r\n\x1b[31m── SESSION ENDED ──\x1b[0m\r\n');
+      };
+
+      ws.onerror = () => {
+        setStatus('error', 'ERROR');
+      };
+
+      // Terminal input → WebSocket
+      term.onData((data) => {
+        if (ws && ws.readyState === 1) {
+          ws.send(data);
+        }
+      });
+    }
+
+    // Resize handling
+    function sendResize() {
+      fitAddon.fit();
+      if (ws && ws.readyState === 1) {
+        ws.send(JSON.stringify({ type: 'resize', cols: term.cols, rows: term.rows }));
+      }
+    }
+
+    window.addEventListener('resize', sendResize);
+
+    // Connect button
+    connectBtn.addEventListener('click', connect);
+
+    // Auto-connect on load
+    connect();
+  </script>
+</body>
+</html>
