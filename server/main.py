@@ -19,6 +19,7 @@ FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
 # --- Hermes agent configuration ---
 DEFAULT_MODEL = os.getenv("LLM_MODEL", "nousresearch/hermes-3-llama-3.1-405b")
 HERMES_MAX_ITERATIONS = int(os.getenv("HERMES_MAX_ITERATIONS", "10"))
+AGENT_TIMEOUT = int(os.getenv("HERMES_AGENT_TIMEOUT", "90"))
 
 # --- Provider configurations ---
 # Each provider maps to a base_url + api_key + list of available models.
@@ -137,19 +138,34 @@ async def websocket_endpoint(ws: WebSocket):
             await ws.send_json({"type": "system", "content": "PROCESSING..."})
 
             try:
-                # AIAgent.run_conversation() is synchronous — run in a thread
-                result = await loop.run_in_executor(
-                    None,
-                    lambda: agent.run_conversation(
-                        user_message=user_msg,
-                        conversation_history=conversation_history,
+                # AIAgent.run_conversation() is synchronous — run in a thread.
+                # Wrapped in wait_for() so a hung upstream API doesn't block
+                # the WebSocket indefinitely (the client would see nothing).
+                result = await asyncio.wait_for(
+                    loop.run_in_executor(
+                        None,
+                        lambda: agent.run_conversation(
+                            user_message=user_msg,
+                            conversation_history=conversation_history,
+                        ),
                     ),
+                    timeout=AGENT_TIMEOUT,
                 )
 
                 reply = result.get("final_response", "")
                 conversation_history = result.get("messages", conversation_history)
 
                 await ws.send_json({"type": "assistant", "content": reply})
+
+            except asyncio.TimeoutError:
+                log.warning("Agent timed out after %ds", AGENT_TIMEOUT)
+                agent = None  # discard — the thread may still be running
+                await ws.send_json({
+                    "type": "system",
+                    "content": f"AGENT TIMEOUT: No response after {AGENT_TIMEOUT}s. "
+                               "The upstream API may be overloaded — try again or "
+                               "switch models.",
+                })
 
             except Exception as e:
                 log.exception("Agent error")

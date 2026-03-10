@@ -2,6 +2,7 @@
 
 ## Index
 
+- [0.4.1 — Agent Timeout Guard](#041--agent-timeout-guard)
 - [0.4.0 — Frontend Overhaul](#040--frontend-overhaul)
 - [0.3.1 — Model Dropdown Loading Fix](#031--model-dropdown-loading-fix)
 - [0.3.0 — Dynamic Model Switching & Nous Direct API](#030--dynamic-model-switching--nous-direct-api)
@@ -9,6 +10,22 @@
 - [0.2.1 — Fly.io Deployment Fix](#021--flyio-deployment-fix)
 - [0.2.0 — Hermes Agent Integration](#020--hermes-agent-integration)
 - [0.1.0 — Project Scaffolding](#010--project-scaffolding)
+
+---
+
+## 0.4.1 — Agent Timeout Guard
+
+**2026-03-10**
+
+The agent could hang indefinitely when the upstream LLM API was overloaded or returned non-retryable errors (e.g. OpenRouter 404 "no endpoints found that support tool use"). The Hermes agent's internal retry loop would keep cycling through its multi-step reasoning phases, each hitting the same dead API, while the WebSocket client received no feedback at all.
+
+### Fixed
+
+- **Infinite hang on API failure** (`server/main.py`) — wrapped `run_conversation()` in `asyncio.wait_for()` with a 90-second default timeout. When the agent exceeds this, the client receives a clear `AGENT TIMEOUT` system message advising to retry or switch models. The stale agent instance is discarded to prevent a zombie thread from interfering with the next request.
+
+### Added
+
+- **`HERMES_AGENT_TIMEOUT`** env var — configurable timeout in seconds (default `90`). Can be tuned per deployment via `.env` or Fly.io secrets.
 
 ---
 
