@@ -2,9 +2,26 @@
 
 ## Index
 
+- [0.2.2 — PYTHONPATH Install Strategy](#022--pythonpath-install-strategy)
 - [0.2.1 — Fly.io Deployment Fix](#021--flyio-deployment-fix)
 - [0.2.0 — Hermes Agent Integration](#020--hermes-agent-integration)
 - [0.1.0 — Project Scaffolding](#010--project-scaffolding)
+
+---
+
+## 0.2.2 — PYTHONPATH Install Strategy
+
+**2026-03-10**
+
+The 0.2.1 `pyproject.toml` patch fixed the missing `agent/` package but exposed a second missing sub-package (`tools/environments/`). Upstream `hermes-agent` also omits `tools.*` sub-packages from its `packages.find.include`, so patching individual entries is a game of whack-a-mole.
+
+### Changed
+
+- **Dockerfile** — replaced the `sed`-patch-then-pip-install approach with a `PYTHONPATH`-based strategy: clone the full `hermes-agent` source to `/opt/hermes-agent`, install only its dependencies via `requirements.txt`, and set `PYTHONPATH` so Python resolves all imports directly from the source tree. This sidesteps all upstream packaging omissions at once.
+
+### Fixed
+
+- **`ModuleNotFoundError: No module named 'tools.environments'`** — `tools/terminal_tool.py` imports `tools.environments.singularity`, a sub-package not included in the upstream package build.
 
 ---
 
