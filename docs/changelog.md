@@ -2,6 +2,7 @@
 
 ## Index
 
+- [3.0.4 — Terminal Input Focus Fix](#304--terminal-input-focus-fix)
 - [3.0.3 — Dockerfile minisweagent Fix](#303--dockerfile-minisweagent-fix)
 - [3.0.2 — Deployment Runtime Fixes](#302--deployment-runtime-fixes)
 - [3.0.1 — Fly.io App Rename](#301--flyio-app-rename)
@@ -17,6 +18,19 @@
 - [0.2.1 — Fly.io Deployment Fix](#021--flyio-deployment-fix)
 - [0.2.0 — Hermes Agent Integration](#020--hermes-agent-integration)
 - [0.1.0 — Project Scaffolding](#010--project-scaffolding)
+
+---
+
+## 3.0.4 — Terminal Input Focus Fix
+
+**2026-03-13**
+
+The browser terminal accepted no keyboard input after connecting — the xterm.js instance was never focused, so keystrokes were silently ignored until the user clicked inside the terminal pane. A secondary issue caused duplicate input handlers to stack on each reconnect.
+
+### Fixed
+
+- **`gateway/static/terminal.html`** — added `term.focus()` in the WebSocket `onopen` callback so the terminal is immediately interactive after connecting.
+- **`gateway/static/terminal.html`** — moved the `term.onData()` listener outside the `connect()` function so it is registered once, preventing duplicate input on reconnect.
 
 ---
 

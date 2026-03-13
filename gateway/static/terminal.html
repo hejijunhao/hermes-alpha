@@ -301,6 +301,9 @@
 
         // Send initial size
         ws.send(JSON.stringify({ type: 'resize', cols: term.cols, rows: term.rows }));
+
+        // Focus the terminal so it accepts keyboard input
+        term.focus();
       };
 
       ws.onmessage = (e) => {
@@ -318,13 +321,14 @@
         setStatus('error', 'ERROR');
       };
 
-      // Terminal input → WebSocket
-      term.onData((data) => {
-        if (ws && ws.readyState === 1) {
-          ws.send(data);
-        }
-      });
     }
+
+    // Terminal input → WebSocket (registered once, outside connect())
+    term.onData((data) => {
+      if (ws && ws.readyState === 1) {
+        ws.send(data);
+      }
+    });
 
     // Resize handling
     function sendResize() {
