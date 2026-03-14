@@ -2,6 +2,7 @@
 
 ## Index
 
+- [3.1.0 — Elephantasm Inject Fix & Always-On Machine](#310--elephantasm-inject-fix--always-on-machine)
 - [3.0.4 — Terminal Input Focus Fix](#304--terminal-input-focus-fix)
 - [3.0.3 — Dockerfile minisweagent Fix](#303--dockerfile-minisweagent-fix)
 - [3.0.2 — Deployment Runtime Fixes](#302--deployment-runtime-fixes)
@@ -18,6 +19,29 @@
 - [0.2.1 — Fly.io Deployment Fix](#021--flyio-deployment-fix)
 - [0.2.0 — Hermes Agent Integration](#020--hermes-agent-integration)
 - [0.1.0 — Project Scaffolding](#010--project-scaffolding)
+
+---
+
+## 3.1.0 — Elephantasm Inject Fix & Always-On Machine
+
+**2026-03-14**
+
+The Elephantasm Memory Pack injection silently failed on every session. The SDK's `inject()` method returns `None` when no memory packs exist yet (i.e., the Dreamer has not synthesized events into memories), but the integration assumed it always returned a `MemoryPack` object. The resulting `AttributeError` on `None.as_prompt()` was caught by a blanket `except Exception` logged at `debug` level — invisible in production.
+
+Separately, the Fly.io machine was configured to scale to zero when idle (`min_machines_running = 0`), causing 5–15 second cold-start delays on the first request after idle periods.
+
+### Fixed
+
+- **`hermes-agent/run_agent.py`** — added a `None` guard around the `inject()` return value. When the SDK returns `None` (no memory pack available), the code now logs an informational message and continues without injecting, instead of crashing silently. When a pack is returned, the original injection logic runs unchanged.
+- **`hermes-agent/run_agent.py`** — upgraded the `inject()` failure log from `debug` to `warning` so future errors are visible in production logs.
+
+### Changed
+
+- **`gateway/fly.toml`** — `min_machines_running` changed from `0` to `1`. One machine now stays warm at all times, eliminating cold-start latency. Additional machines still auto-stop under `auto_stop_machines = 'stop'`.
+
+### Removed
+
+- **`hermes-terminal` Fly.io app** — destroyed the old app which was suspended and no longer in use since the 3.0.1 rename to `hermes-alpha`.
 
 ---
 

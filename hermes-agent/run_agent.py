@@ -3344,13 +3344,16 @@ class AIAgent:
                     query=original_user_message,
                     preset="conversational",
                 )
-                self._elephantasm_context = pack.as_prompt()
-                logger.info(
-                    "Elephantasm injected: %d memories, %d knowledge items, %d tokens",
-                    pack.session_memory_count, pack.knowledge_count, pack.token_count,
-                )
+                if pack is not None:
+                    self._elephantasm_context = pack.as_prompt()
+                    logger.info(
+                        "Elephantasm injected: %d memories, %d knowledge items, %d tokens",
+                        pack.session_memory_count, pack.knowledge_count, pack.token_count,
+                    )
+                else:
+                    logger.info("Elephantasm: no memory pack available yet (Dreamer has not synthesized)")
             except Exception as e:
-                logger.debug("Elephantasm inject failed (non-fatal): %s", e)
+                logger.warning("Elephantasm inject failed (non-fatal): %s", e)
 
         # Add user message
         user_msg = {"role": "user", "content": user_message}
