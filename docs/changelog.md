@@ -2,6 +2,7 @@
 
 ## Index
 
+- [4.1.0 — Resilient PTY & Messaging Gateway Sidecar](#410--resilient-pty--messaging-gateway-sidecar)
 - [4.0.0 — Overseer Identity & Blank-Slate Bootstrap](#400--overseer-identity--blank-slate-bootstrap)
 - [3.2.1 — Alpha Branding](#321--alpha-branding)
 - [3.2.0 — Hunter Access: GitHub + Fly.io Credentials](#320--hunter-access-github--flyio-credentials)
@@ -22,6 +23,46 @@
 - [0.2.1 — Fly.io Deployment Fix](#021--flyio-deployment-fix)
 - [0.2.0 — Hermes Agent Integration](#020--hermes-agent-integration)
 - [0.1.0 — Project Scaffolding](#010--project-scaffolding)
+
+---
+
+## 4.1.0 — Resilient PTY & Messaging Gateway Sidecar
+
+**2026-03-15**
+
+The Alpha agent froze mid-session and became unreachable — the `hermes chat` PTY process died (reaped with SIGTERM), but the WebSocket handler didn't detect the exit, leaving the browser showing a frozen terminal. Reconnecting spawned a new PTY, but the underlying instability persisted. Worse, the entire agent was inaccessible: no Telegram, no Discord, no fallback — because the deployment only ran the web terminal. If the PTY died, everything died.
+
+This release fixes both problems: the web terminal now detects and reports PTY crashes gracefully, and the entrypoint can optionally launch the Hermes messaging gateway as an independent sidecar process.
+
+### Fixed
+
+- **Frozen terminal on PTY crash** (`gateway/app.py`) — added a `_watch_proc()` asyncio task that `await`s the child process exit. When the PTY process dies, it immediately pushes a sentinel into the read queue, breaking the `pty_to_ws` loop. Previously, the handler only discovered a dead PTY on the next failed `os.read()`, which might never come if the process exited cleanly without closing its fd.
+- **Silent PTY death** (`gateway/app.py`) — when the PTY process exits, the browser now receives a visible red ANSI message: `[hermes process exited — refresh to reconnect]`. Previously the terminal just froze with no indication of what happened.
+- **Crash on write to dead PTY** (`gateway/app.py`) — `os.write(master_fd, ...)` in `ws_to_pty` is now wrapped in `try/except OSError`, preventing an unhandled exception from crashing the WebSocket handler when the user types into a terminal whose PTY has already died.
+
+### Added
+
+- **Messaging gateway sidecar** (`gateway/entrypoint.sh`) — the entrypoint now auto-detects if any messaging platform token (`TELEGRAM_BOT_TOKEN`, `DISCORD_BOT_TOKEN`, `SLACK_BOT_TOKEN`, `SIGNAL_HTTP_URL`) is configured in the hermes `.env` file. If found, it launches `hermes gateway run` as a background process before starting uvicorn. The gateway connects to messaging platforms via their bot APIs and calls the agent loop directly — no PTY involved — so it stays alive independently of the web terminal.
+- **Gateway auto-restart** (`gateway/entrypoint.sh`) — a background supervisor loop monitors the gateway process. If it exits with a non-zero code, it waits 5 seconds and restarts automatically. Clean exits (code 0) are not restarted.
+- **Platform secret injection** (`gateway/entrypoint.sh`) — added `write_if_set` entries for all messaging platform environment variables: `TELEGRAM_BOT_TOKEN`, `TELEGRAM_ALLOWED_USERS`, `TELEGRAM_HOME_CHANNEL`, `DISCORD_BOT_TOKEN`, `DISCORD_ALLOWED_USERS`, `DISCORD_HOME_CHANNEL`, `SLACK_BOT_TOKEN`, `SLACK_APP_TOKEN`, `SLACK_ALLOWED_USERS`, `SIGNAL_HTTP_URL`, `SIGNAL_ACCOUNT`, `SIGNAL_ALLOWED_USERS`. These are injected from Fly.io secrets into the hermes `.env` file at container boot, following the same pattern established in 1.0.0.
+- **Messaging platform documentation** (`.env.example`) — added commented-out examples for Telegram, Discord, and Slack tokens with brief usage notes.
+
+### Changed
+
+- **PTY lifecycle management** (`gateway/app.py`) — extracted PTY spawning into `_spawn_pty_async()` and cleanup into `_cleanup_pty()`. The cleanup function safely handles already-closed fds and already-exited processes, preventing double-close errors. Logging added at spawn, exit, and cleanup stages via `hermes.web` logger.
+
+### Architecture
+
+The deployment now supports two independent agent interfaces running in the same container:
+
+| Interface | Process | Transport | PTY? | Survives PTY crash? |
+|---|---|---|---|---|
+| **Web terminal** | uvicorn (PID 1) | WebSocket → PTY → `hermes chat` | Yes | No — but now reports the crash cleanly |
+| **Messaging gateway** | `hermes gateway run` (background) | Bot API → agent loop (in-process) | No | Yes — completely independent |
+
+The web terminal remains the primary interface and runs as PID 1 (via `exec uvicorn`), so Fly.io's health checks and signal handling work unchanged. The messaging gateway is a child process managed by a simple bash supervisor — not a full process manager, but sufficient for a single sidecar. The gateway's logs go to `/root/.hermes/logs/gateway.log` on the persistent volume.
+
+To enable the messaging gateway, set platform tokens as Fly secrets (e.g. `fly secrets set TELEGRAM_BOT_TOKEN=... --config gateway/fly.toml`) and redeploy. The entrypoint detects them automatically — no code changes needed.
 
 ---
 

@@ -3,6 +3,7 @@ import fcntl
 import hashlib
 import hmac
 import json
+import logging
 import os
 import pty
 import secrets
@@ -11,8 +12,10 @@ import termios
 from pathlib import Path
 
 from fastapi import FastAPI, WebSocket, Request, Form
-from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse
+from fastapi.responses import RedirectResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
+
+logger = logging.getLogger("hermes.web")
 
 app = FastAPI()
 
@@ -62,6 +65,45 @@ async def terminal_page(request: Request):
     return FileResponse(STATIC_DIR / "terminal.html")
 
 
+# ── PTY helpers ──────────────────────────────────────────
+
+
+async def _spawn_pty_async(cmd: list[str]):
+    """Spawn a command in a new PTY (async version). Returns (process, master_fd)."""
+    master_fd, slave_fd = pty.openpty()
+    env = {**os.environ, "TERM": "xterm-256color"}
+
+    proc = await asyncio.create_subprocess_exec(
+        *cmd,
+        stdin=slave_fd, stdout=slave_fd, stderr=slave_fd,
+        preexec_fn=os.setsid,
+        env=env,
+    )
+    os.close(slave_fd)
+
+    # Non-blocking reads on master
+    flags = fcntl.fcntl(master_fd, fcntl.F_GETFL)
+    fcntl.fcntl(master_fd, fcntl.F_SETFL, flags | os.O_NONBLOCK)
+
+    return proc, master_fd
+
+
+def _cleanup_pty(loop, master_fd, proc):
+    """Safely clean up PTY resources."""
+    try:
+        loop.remove_reader(master_fd)
+    except Exception:
+        pass
+    try:
+        os.close(master_fd)
+    except OSError:
+        pass
+    try:
+        proc.terminate()
+    except ProcessLookupError:
+        pass
+
+
 # ── WebSocket PTY Bridge ─────────────────────────────────
 
 
@@ -78,21 +120,8 @@ async def ws_terminal(ws: WebSocket, provider: str = "openrouter"):
     if provider in ("nous", "openrouter"):
         cmd.extend(["--provider", provider])
 
-    # Spawn in a real PTY
-    master_fd, slave_fd = pty.openpty()
-    env = {**os.environ, "TERM": "xterm-256color"}
-
-    proc = await asyncio.create_subprocess_exec(
-        *cmd,
-        stdin=slave_fd, stdout=slave_fd, stderr=slave_fd,
-        preexec_fn=os.setsid,
-        env=env,
-    )
-    os.close(slave_fd)
-
-    # Non-blocking reads on master
-    flags = fcntl.fcntl(master_fd, fcntl.F_GETFL)
-    fcntl.fcntl(master_fd, fcntl.F_SETFL, flags | os.O_NONBLOCK)
+    proc, master_fd = await _spawn_pty_async(cmd)
+    logger.info("PTY spawned: pid=%s cmd=%s", proc.pid, cmd)
 
     loop = asyncio.get_running_loop()
     queue: asyncio.Queue = asyncio.Queue()
@@ -102,15 +131,30 @@ async def ws_terminal(ws: WebSocket, provider: str = "openrouter"):
             data = os.read(master_fd, 65536)
             if data:
                 queue.put_nowait(data)
+            else:
+                queue.put_nowait(None)
         except OSError:
             queue.put_nowait(None)
 
     loop.add_reader(master_fd, _on_pty_data)
 
+    async def _watch_proc():
+        """Monitor the child process and signal the queue when it exits."""
+        retcode = await proc.wait()
+        logger.warning("PTY process exited: pid=%s retcode=%s", proc.pid, retcode)
+        queue.put_nowait(None)
+
     async def pty_to_ws():
         while True:
             data = await queue.get()
             if data is None:
+                # PTY died — notify the browser so it can show a message
+                try:
+                    await ws.send_text(
+                        "\r\n\x1b[31m[hermes process exited — refresh to reconnect]\x1b[0m\r\n"
+                    )
+                except Exception:
+                    pass
                 break
             try:
                 await ws.send_text(data.decode("utf-8", errors="replace"))
@@ -138,19 +182,22 @@ async def ws_terminal(ws: WebSocket, provider: str = "openrouter"):
                             continue
                     except (json.JSONDecodeError, KeyError):
                         pass
-                os.write(master_fd, text.encode("utf-8"))
+                try:
+                    os.write(master_fd, text.encode("utf-8"))
+                except OSError:
+                    # PTY fd is dead
+                    break
         except Exception:
             pass
+
+    watcher = asyncio.create_task(_watch_proc())
 
     try:
         await asyncio.gather(pty_to_ws(), ws_to_pty())
     finally:
-        loop.remove_reader(master_fd)
-        os.close(master_fd)
-        try:
-            proc.terminate()
-        except ProcessLookupError:
-            pass
+        watcher.cancel()
+        _cleanup_pty(loop, master_fd, proc)
+        logger.info("WebSocket session cleaned up: pid=%s", proc.pid)
 
 
 # Static assets (must be last)
