@@ -2,6 +2,7 @@
 
 ## Index
 
+- [3.2.0 — Hunter Access: GitHub + Fly.io Credentials](#320--hunter-access-github--flyio-credentials)
 - [3.1.0 — Elephantasm Inject Fix & Always-On Machine](#310--elephantasm-inject-fix--always-on-machine)
 - [3.0.4 — Terminal Input Focus Fix](#304--terminal-input-focus-fix)
 - [3.0.3 — Dockerfile minisweagent Fix](#303--dockerfile-minisweagent-fix)
@@ -19,6 +20,34 @@
 - [0.2.1 — Fly.io Deployment Fix](#021--flyio-deployment-fix)
 - [0.2.0 — Hermes Agent Integration](#020--hermes-agent-integration)
 - [0.1.0 — Project Scaffolding](#010--project-scaffolding)
+
+---
+
+## 3.2.0 — Hunter Access: GitHub + Fly.io Credentials
+
+**2026-03-15**
+
+The Alpha agent (Path B of the A/B experiment described in [`vision.md`](vision.md)) needs to act as the Master — modifying and deploying the Hunter agent autonomously. This requires two capabilities the container didn't have: pushing code to a GitHub repo and deploying a Fly.io app. Both are now available via environment variables, following the same secret-injection pattern established in 1.0.0.
+
+### Added
+
+- **`flyctl` CLI** (`gateway/Dockerfile`) — installed via `fly.io/install.sh` and added to `PATH`. Gives the Alpha agent the ability to run `fly deploy`, `fly status`, `fly logs`, etc. from within its terminal session to manage the Hunter's Fly app.
+- **Git credential setup** (`gateway/entrypoint.sh`) — when `GITHUB_TOKEN` is set, the entrypoint configures `git config --global credential.helper store` and seeds `/root/.git-credentials` with the token. This means `git clone`, `git push`, and `git pull` against GitHub work without interactive authentication. Identity is set to `hermes-alpha <hermes-alpha@noreply>`.
+- **`HUNTER_REPO` and `HUNTER_FLY_APP` env vars** (`gateway/entrypoint.sh`) — written to `~/.hermes/.env` when set, giving the agent context about where the Hunter's code and deployment live. These are not secrets — just pointers (e.g. `Crimson-Sun/hermes-hunter`, `hermes-hunter`).
+- **Environment variable documentation** (`.env.example`) — `GITHUB_TOKEN`, `FLY_API_TOKEN`, `HUNTER_REPO`, and `HUNTER_FLY_APP` with commented-out examples.
+- **`docs/vision.md`** — comprehensive architecture document for the Hermes Hunter system: two-agent hierarchy (Master/Hunter), Elephantasm integration, budget system, self-improvement loops, safety guardrails, and the A/B experiment (Prime vs Alpha).
+- **`docs/next-steps.md`** — step-by-step setup instructions for creating the Hunter GitHub repo, generating a fine-grained PAT, creating the Hunter Fly app, generating a deploy token, and setting all secrets on hermes-alpha.
+
+### Architecture
+
+The Alpha agent's Master capabilities are delivered entirely through credentials, not custom tooling — consistent with the Path B philosophy of "zero custom code, only a blueprint." The agent receives:
+
+| Credential | Mechanism | What It Enables |
+|---|---|---|
+| `GITHUB_TOKEN` | Git credential store (auto-configured at boot) | Clone, modify, commit, push Hunter code |
+| `FLY_API_TOKEN` | Env var (auto-detected by `flyctl`) | Deploy, monitor, manage Hunter Fly app |
+
+No Master-specific tools, APIs, or controllers are built. The stock Hermes agent uses its existing terminal tool to run `git` and `flyctl` commands directly — the same way a human developer would.
 
 ---
 

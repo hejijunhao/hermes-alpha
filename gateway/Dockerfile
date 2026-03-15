@@ -1,9 +1,12 @@
 FROM python:3.11-slim
 
-# System deps: nodejs for hermes browser tools
+# System deps: nodejs for hermes browser tools, flyctl for Hunter deployment
 RUN apt-get update && apt-get install -y --no-install-recommends \
         git curl ca-certificates nodejs npm \
+    && curl -L https://fly.io/install.sh | sh \
     && rm -rf /var/lib/apt/lists/*
+
+ENV PATH="/root/.fly/bin:${PATH}"
 
 # Copy vendored hermes-agent source and install with all extras
 COPY hermes-agent/ /opt/hermes-agent/
